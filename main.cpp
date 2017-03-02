@@ -28,9 +28,9 @@ int main(int argc, char **argv)
 {
     //Problem definition-------------------------------------------------------------
     SVMModel test;
-    test.prepare("regular_training.txt", "spam_training.txt");
-    test.save_model("model.svm");
-    //test.load_model("model.svm");
+    //test.prepare("regular_training.txt", "spam_training.txt");
+    //test.save_model("model.svm");
+    test.load_model("model.svm");
 
     //test.predict_train_data();
     //test.predict_file("test.txt", true);

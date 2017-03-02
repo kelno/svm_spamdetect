@@ -407,7 +407,7 @@ int Kernel::edit(const char *px, const char *py)
 	free(row[0]); free(row[1]);
    
     //LOLILOL HACKFIX TEST BISOUS++
-    result /= (len1 + len2);
+    //result /= (len1 + len2);
 	return result;
 }
 #endif

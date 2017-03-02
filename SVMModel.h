@@ -19,7 +19,7 @@ public:
 
 	// Run testing file
     void predict_file(std::string file, bool print_all = true, bool print_spam_only = false);
-    double predict(std::string const& line, bool print = true, bool print_spam_only = false);
+    double predict(std::string const& line, std::ofstream& spam_dump, bool print = true, bool print_spam_only = false);
 
     bool save_model(std::string file);
     bool load_model(std::string file);

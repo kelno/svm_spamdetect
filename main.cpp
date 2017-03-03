@@ -9,7 +9,7 @@
 - Tests different svm types
 - filtrage de bayes ? 
 - Reduce model
-
+- tweak edit distance
 
 -> Beaucoup de char spéciaux? -> SVM (+ SVM moins précis avant?)
                               -> Bayes
@@ -35,8 +35,7 @@ int main(int argc, char **argv)
     //test.predict_train_data();
     //test.predict_file("test.txt", true);
     //test.predict_file("zet_spamdetect_20170302.csv", true);
-    test.predict_file("random.txt", true, true);
-
+    test.predict_file("random3.txt", true, true);
     //test.predict_file("regular_training.txt", true, true);
     //test.predict_file("spam_training.txt", true, true);
    

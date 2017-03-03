@@ -19,13 +19,13 @@ public:
 
 	// Run testing file
     void predict_file(std::string file, bool print_all = true, bool print_spam_only = false);
-    double predict(std::string const& line, std::ofstream& spam_dump, bool print = true, bool print_spam_only = false);
+    double predict(std::string const& line, bool print = true, bool print_spam_only = false, std::ofstream* spam_dump = nullptr);
 
     bool save_model(std::string file);
     bool load_model(std::string file);
 
 private:
-    //return false if string can be ignored
+    //return false if string can be ignored for training
     bool prepare_string(std::string& str);
 
     void read_file(std::string filename, std::vector<std::string>& output, bool prepare = true);

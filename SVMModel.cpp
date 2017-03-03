@@ -143,7 +143,7 @@ void SVMModel::predict_train_data()
     test_timer.stop(true);
 }
 
-double SVMModel::predict(std::string const& line, std::ofstream& spam_dump, bool print /*= true*/, bool print_spam_only /*= false */)
+double SVMModel::predict(std::string const& line, bool print /*= true*/, bool print_spam_only /*= false */, std::ofstream* spam_dump /* = nullptr */ )
 {
     svm_data testnode;
     std::string line_prepared(line);
@@ -156,8 +156,8 @@ double SVMModel::predict(std::string const& line, std::ofstream& spam_dump, bool
             std::cout << retval << "\t" << line << std::endl << std::endl;
 
     //send spam to spam dump
-    if (!spam_dump.fail() && retval == -1.0f)
-        spam_dump << line << std::endl;
+    if (spam_dump && !spam_dump->fail() && retval == -1.0f)
+        *spam_dump << line << std::endl;
 
     return retval;
 }
@@ -171,6 +171,9 @@ void SVMModel::predict_file(std::string file, bool print_all /*= true*/, bool pr
     }
 
     std::ofstream spam_dump("spamdump.txt", std::ios_base::app | std::ios_base::out);
+    if (spam_dump.fail())
+        abort();
+    spam_dump << "=========================================================================" << std::endl;
 
     std::cout << "Predicting " << file << " file..." << std::endl;
     Timer test_timer("");
@@ -185,7 +188,7 @@ void SVMModel::predict_file(std::string file, bool print_all /*= true*/, bool pr
     int percentage = 5;
 	for (auto const& itr : tests)
 	{
-        retval = predict(itr, spam_dump, print_all, print_spam_only);
+        retval = predict(itr, print_all, print_spam_only, &spam_dump);
         retval == -1 ? spam++ : non_spam++;
         idx++;
         if ((100 * idx / line_count) > percentage)

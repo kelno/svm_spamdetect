@@ -19,15 +19,14 @@ struct svm_node
 #ifdef _STRING
 struct svm_data
 {
-    struct svm_node *v;
-    char *s;
+    struct svm_node* v;
+    char* s;
 };
 struct svm_problem
 {
     unsigned int l;
     double *y;
-    //int* y;
-    struct svm_data *x;
+    struct svm_data* x;
 };
 
 #else

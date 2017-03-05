@@ -10,6 +10,8 @@
 #include "svm.h"
 #include <vector>
 #include <algorithm>
+//until I get openmp to work here
+#include "../ThreadPool.h" 
 
 int libsvm_version = LIBSVM_VERSION;
 typedef float Qfloat;
@@ -1507,6 +1509,9 @@ public:
         int start, j;
         if((start = cache->get_data(i,&data,len)) < len)
         {
+#ifdef _OPENMP
+#pragma omp parallel for private(j)
+#endif
             for(j=start;j<len;j++)
                 data[j] = (Qfloat)(y[i]*y[j]*(this->*kernel_function)(i,j));
         }
@@ -2752,11 +2757,7 @@ double svm_get_svr_probability(const svm_model *model)
     }
 }
 
-#ifdef _STRING
 double svm_predict_values(const svm_model *model, const svm_data x, double* dec_values)
-#else
-double svm_predict_values(const svm_model *model, const svm_node *x, double* dec_values)
-#endif
 {
     int i;
     if(model->param.svm_type == ONE_CLASS ||
@@ -2764,9 +2765,16 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
        model->param.svm_type == NU_SVR)
     {
         double *sv_coef = model->sv_coef[0];
-        double sum = 0;
-        for(i=0;i<model->l;i++)
-            sum += sv_coef[i] * Kernel::k_function(x,model->SV[i],model->param);
+        double sum = 0; int i;
+//replace OPENMP with ThreadPool until I get it to work
+#ifdef _OPENMP_
+#pragma omp parallel for private(i) reduction(+:sum)
+#endif
+      //  for(i=0;i<model->l;i++)
+        ThreadPool::ParallelFor(0, model->l, [&](int i)
+        {
+            sum += sv_coef[i] * Kernel::k_function(x, model->SV[i], model->param);
+        });
         sum -= model->rho[0];
         *dec_values = sum;
 
@@ -2781,8 +2789,15 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
         int l = model->l;
         
         double *kvalue = Malloc(double,l);
-        for(i=0;i<l;i++)
-            kvalue[i] = Kernel::k_function(x,model->SV[i],model->param);
+//replace OPENMP with ThreadPool until I get it to work
+#ifdef _OPENMP_
+#pragma omp parallel for private(i)
+#endif
+        //for(i=0;i<l;i++) 
+        ThreadPool::ParallelFor(0, l, [&](int i) 
+        {
+            kvalue[i] = Kernel::k_function(x, model->SV[i], model->param);
+        });
 
         int *start = Malloc(int,nr_class);
         start[0] = 0;

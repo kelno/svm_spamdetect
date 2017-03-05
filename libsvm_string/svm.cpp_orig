@@ -8,9 +8,6 @@
 #include <limits.h>
 #include <locale.h>
 #include "svm.h"
-#include <vector>
-#include <algorithm>
-
 int libsvm_version = LIBSVM_VERSION;
 typedef float Qfloat;
 typedef signed char schar;
@@ -248,7 +245,7 @@ private:
 
 	static double dot(const svm_node *px, const svm_node *py);
 #ifdef _STRING
-	static double edit(const char *px, const char *py);
+	static int edit(const char *px, const char *py);
 	double kernel_linear(int i, int j) const
 	{
 		return dot(x[i].v,x[j].v);
@@ -271,7 +268,7 @@ private:
 	}
 	double kernel_edit(int i, int j) const
 	{
-		return exp(-gamma * edit(x[i].s,x[j].s));
+		return exp(-gamma*(double)edit(x[i].s,x[j].s));
 	}
 #else
 	double kernel_linear(int i, int j) const
@@ -376,100 +373,40 @@ double Kernel::dot(const svm_node *px, const svm_node *py)
 }
 
 #ifdef _STRING
-double Kernel::edit(const char *px, const char *py)
+int Kernel::edit(const char *px, const char *py)
 {
-
-#define OLD
-#ifdef OLD
-    double* row[2];
+	int* row[2];
 	int len1,len2;
 	int now,old;
 	int i,j;
-	double result;
-    int similarity = 0;
+	int result;
 
-	len1=(int)strlen(px); 
-    len2=(int)strlen(py);
+	len1=(int)strlen(px); len2=(int)strlen(py);
 
-	row[0] = (double*) malloc( (len1+1) * sizeof(double) );
-	row[1] = (double*) malloc( (len1+1) * sizeof(double) );
+	row[0] = (int*) malloc( (len1+1) * sizeof(int) );
+	row[1] = (int*) malloc( (len1+1) * sizeof(int) );
 
-	for(i=0;i<len1+1;i++) 
-        row[0][i]=i;
-
+	for(i=0;i<len1+1;i++) row[0][i]=i;
 	now=1; old=0;
-    double min;
 
 	for(j=0;j<len2;j++) /* j=0 is the first char of py */
 	{
 		row[now][0]=j+1;
 		for(i=0;i<len1;i++) /* i=0 is the first char of px */
 		{
-            /*
 			row[now][i+1] = min(min( row[old][i] + (px[i]==py[j]?0:1) , 
 						 row[old][i+1] + 1),
 					    row[now][i] + 1                        );
-            */
-            min = std::min(row[now][i] + 1, row[old][i + 1] + 1);
-            if (px[i] == py[j])
-            {
-                min = std::min(min, row[old][i]);
-                similarity++;
-            }
-            else {
-                min = std::min(min, row[old][i] + 1);
-            }
-            row[now][i + 1] = min;
 		}
 
-		now=1-now; 
-        old=1-old;
+		now=1-now; old=1-old;
 	}
 
-	//result=row[old][len1];
-    //result = 1.0f - (similarity / double(std::min(len1, len2)));
-    result = row[old][len1] / double(std::max(len1, len2));
+	result=row[old][len1];
    
 	free(row[0]); free(row[1]);
    
 	return result;
-#else
-    int len1 = (int)strlen(px);
-    int len2 = (int)strlen(py);
-    int similarity = 0;
-
-    // init a table with dimensions len1+1 x len2+1, filled with 0
-    std::vector<std::vector<double>> table(len1+1, std::vector<double>(len2+1, 0.0f));
-
-    for (int i = 0; i < len1 + 1; i++)
-        table[i][0] = i / (double)len1;
-
-    for (int j = 0; j < len2 + 1; j++)
-        table[0][j] = j / (double)len2;
-
-    double min;
-    for (int i = 1; i < len1 + 1; i++)
-    {
-        for (int j = 1; j < len2 + 1; j++)
-        {
-            min = std::min(table[i - 1][j] + 1 / double(len1), table[i - 1][j] + 1 / double(len2));
-            if (px[i - 1] != py[j - 1])
-            {
-                min = std::min(min, table[i - 1][j - 1] + 0.5f * (1 / double(len1) + 1 / double(len2)));
-            }
-            else
-            {
-                min = std::min(min, table[i - 1][j - 1]);
-                similarity++;
-            }
-
-            table[i][j] = min;
-        }
-    }
-
-    double result = 1.0f - (similarity / double(std::min(len1, len2)));
-    return result;
-#endif //OLD
 }
 #endif
 
@@ -1497,7 +1434,7 @@ public:
 		clone(y,y_,prob.l);
 		cache = new Cache(prob.l,(long int)(param.cache_size*(1<<20)));
 		QD = new double[prob.l];
-		for(unsigned int i=0;i<prob.l;i++)
+		for(int i=0;i<prob.l;i++)
 			QD[i] = (this->*kernel_function)(i,i);
 	}
 	
@@ -1546,7 +1483,7 @@ public:
 	{
 		cache = new Cache(prob.l,(long int)(param.cache_size*(1<<20)));
 		QD = new double[prob.l];
-		for(unsigned int i=0;i<prob.l;i++)
+		for(int i=0;i<prob.l;i++)
 			QD[i] = (this->*kernel_function)(i,i);
 	}
 	
@@ -1756,12 +1693,12 @@ static void solve_one_class(
 	const svm_problem *prob, const svm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
 {
-    unsigned int l = prob->l;
+	int l = prob->l;
 	double *zeros = new double[l];
 	schar *ones = new schar[l];
-    unsigned int i;
+	int i;
 
-    unsigned int n = (int)(param->nu*prob->l);	// # of alpha's at upper bound
+	int n = (int)(param->nu*prob->l);	// # of alpha's at upper bound
 
 	for(i=0;i<n;i++)
 		alpha[i] = 1;
@@ -1900,7 +1837,7 @@ static decision_function svm_train_one(
 
 	int nSV = 0;
 	int nBSV = 0;
-	for(unsigned int i=0;i<prob->l;i++)
+	for(int i=0;i<prob->l;i++)
 	{
 		if(fabs(alpha[i]) > 0)
 		{
@@ -2119,8 +2056,8 @@ static void svm_binary_svc_probability(
 	const svm_problem *prob, const svm_parameter *param,
 	double Cp, double Cn, double& probA, double& probB)
 {
-    unsigned int i;
-    unsigned int nr_fold = 5;
+	int i;
+	int nr_fold = 5;
 	int *perm = Malloc(int,prob->l);
 	double *dec_values = Malloc(double,prob->l);
 
@@ -2133,9 +2070,9 @@ static void svm_binary_svc_probability(
 	}
 	for(i=0;i<nr_fold;i++)
 	{
-        unsigned int begin = i*prob->l/nr_fold;
-        unsigned int end = (i+1)*prob->l/nr_fold;
-        unsigned int j,k;
+		int begin = i*prob->l/nr_fold;
+		int end = (i+1)*prob->l/nr_fold;
+		int j,k;
 		struct svm_problem subprob;
 
 		subprob.l = prob->l-(end-begin);
@@ -2209,7 +2146,7 @@ static void svm_binary_svc_probability(
 static double svm_svr_probability(
 	const svm_problem *prob, const svm_parameter *param)
 {
-    unsigned int i;
+	int i;
 	int nr_fold = 5;
 	double *ymv = Malloc(double,prob->l);
 	double mae = 0;
@@ -2348,7 +2285,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		model->rho[0] = f.rho;
 
 		int nSV = 0;
-		unsigned int i;
+		int i;
 		for(i=0;i<prob->l;i++)
 			if(fabs(f.alpha[i]) > 0) ++nSV;
 		model->l = nSV;
@@ -2932,7 +2869,7 @@ int svm_save_model(const char *model_file_name, const svm_model *model)
 
 	char *old_locale = setlocale(LC_ALL, NULL);
 	if (old_locale) {
-		old_locale = _strdup(old_locale);
+		old_locale = strdup(old_locale);
 	}
 	setlocale(LC_ALL, "C");
 
@@ -3211,14 +3148,14 @@ bool read_model_header(FILE *fp, svm_model* model)
 
 }
 
-svm_model* svm_load_model(const char *model_file_name)
+svm_model *svm_load_model(const char *model_file_name)
 {
 	FILE *fp = fopen(model_file_name,"rb");
-	if(fp==NULL) return nullptr;
+	if(fp==NULL) return NULL;
 
 	char *old_locale = setlocale(LC_ALL, NULL);
 	if (old_locale) {
-		old_locale = _strdup(old_locale);
+		old_locale = strdup(old_locale);
 	}
 	setlocale(LC_ALL, "C");
 
@@ -3352,7 +3289,7 @@ svm_model* svm_load_model(const char *model_file_name)
 	free(old_locale);
 
 	if (ferror(fp) != 0 || fclose(fp) != 0)
-		return nullptr;
+		return NULL;
 
 	model->free_sv = 1;	// XXX
 	return model;

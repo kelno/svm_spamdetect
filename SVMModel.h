@@ -12,14 +12,25 @@ public:
     SVMModel();
     ~SVMModel();
 
-    void prepare(std::string regular_file, std::string spam_file);
+    void prepare(std::string regular_file, std::string spam_file, double overrideC = 0.0f);
 
     // Just run prediction on the data the model was fed on
     void predict_train_data();
 
+    enum PrintOptions
+    {
+        PRINT_NONE = 0,
+        PRINT_GOOD = 1,
+        PRINT_BAD  = 2,
+
+        PRINT_ALL  = PRINT_GOOD | PRINT_BAD,
+    };
+
 	// Run testing file
-    void predict_file(std::string file, bool print_all = true, bool print_spam_only = false);
-    double predict(std::string const& line, bool print = true, bool print_spam_only = false, std::ofstream* spam_dump = nullptr);
+    void predict_file(std::string file, PrintOptions options = PRINT_NONE);
+    double predict(std::string const& line, PrintOptions options = PRINT_NONE, std::ofstream* spam_dump = nullptr);
+
+    void test_C(std::string training_regular_file, std::string training_spam_file, std::string testing_regular_file, std::string testing_spam_file);
 
     bool save_model(std::string file);
     bool load_model(std::string file);

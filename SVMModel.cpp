@@ -15,24 +15,24 @@
 const int LIMIT_INPUT_LOL = 3000; //0 to disable
 
 SVMModel::SVMModel()
-	: model(nullptr)
+    : model(nullptr)
 {
-	param.svm_type = C_SVC;
-	param.kernel_type = EDIT;
-	param.data_type = STRING;
-	param.degree = 3; //OSEF
-	param.gamma = 0.5; //OSEF
-	param.coef0 = 0; //OSEF
-	param.nu = 0.5;
-	param.cache_size = 1024;
-	param.C = 0.1;
-	param.eps = 1e-5;
-	param.p = 0.1;
-	param.shrinking = 1;
-	param.probability = 0;
+    param.svm_type = C_SVC;
+    param.kernel_type = EDIT;
+    param.data_type = STRING;
+    param.degree = 3; //OSEF
+    param.gamma = 0.5; //OSEF
+    param.coef0 = 0; //OSEF
+    param.nu = 0.5;
+    param.cache_size = 1024;
+    param.C = 0.1;
+    param.eps = 1e-5;
+    param.p = 0.1;
+    param.shrinking = 1;
+    param.probability = 0;
 
     //weight
-	param.nr_weight = 2;
+    param.nr_weight = 2;
     param.weight_label = new double[param.nr_weight];
     param.weight_label[0] = 1.0f; //non spam
     param.weight_label[1] = -1.0f; //spam
@@ -61,10 +61,10 @@ void SVMModel::prepare(std::string regular_file, std::string spam_file, double o
 
     std::cout << "Preparing model from files " << regular_file << " (regular) and " << spam_file << " (spam)..." << std::endl;
     Timer timer("Total training time: ");
-	regular_strings.reserve(200000);
-	spam_strings.reserve(200000);
-	read_file("regular_training.txt", regular_strings);
-	read_file("spam_training.txt", spam_strings);
+    regular_strings.reserve(200000);
+    spam_strings.reserve(200000);
+    read_file("regular_training.txt", regular_strings);
+    read_file("spam_training.txt", spam_strings);
 
     if (LIMIT_INPUT_LOL)
     {
@@ -72,35 +72,35 @@ void SVMModel::prepare(std::string regular_file, std::string spam_file, double o
         regular_strings.resize(LIMIT_INPUT_LOL);
     }
 
-	struct svm_problem prob;
+    struct svm_problem prob;
     prob.l = unsigned int(regular_strings.size() + spam_strings.size());
 
-	svm_data* x = new svm_data[prob.l];
-	prob.y = new double[prob.l];
+    svm_data* x = new svm_data[prob.l];
+    prob.y = new double[prob.l];
 
-	unsigned int idx = 0;
-	for (auto const& itr : regular_strings)
-	{
-		x[idx].s = const_cast<char*>(itr.c_str());
-		prob.y[idx] = 1.0f;
-		idx++;
-	}
-	for (auto const& itr : spam_strings)
-	{
-		x[idx].s = const_cast<char*>(itr.c_str());
-		prob.y[idx] = -1.0f;
-		idx++;
-	}
+    unsigned int idx = 0;
+    for (auto const& itr : regular_strings)
+    {
+        x[idx].s = const_cast<char*>(itr.c_str());
+        prob.y[idx] = 1.0f;
+        idx++;
+    }
+    for (auto const& itr : spam_strings)
+    {
+        x[idx].s = const_cast<char*>(itr.c_str());
+        prob.y[idx] = -1.0f;
+        idx++;
+    }
 
-	prob.x = x;
+    prob.x = x;
 
 
-	// Train model
-	model = svm_train(&prob, &param);
+    // Train model
+    model = svm_train(&prob, &param);
 
     // Cleaning up
-	delete x;
-	delete prob.y;
+    delete x;
+    delete prob.y;
     if (param.C != oldC) //restore C if it was overriden
         param.C = oldC;
 
@@ -119,34 +119,34 @@ void SVMModel::predict_train_data()
 
     std::cout << "Re testing data we trained the model on..." << std::endl;
     Timer test_timer("Total time: ");
-	svm_data testnode;
-	double retval;
+    svm_data testnode;
+    double retval;
 
-	int regularSuccessTests = 0;
-	int regularFailedTests = 0;
-	int spamSuccessTests = 0;
-	int spamFailedTests = 0;
+    int regularSuccessTests = 0;
+    int regularFailedTests = 0;
+    int spamSuccessTests = 0;
+    int spamFailedTests = 0;
 
-	for (auto const& itr : regular_strings)
-	{
-		testnode.s = const_cast<char*>(itr.c_str());
-		retval = svm_predict(model, testnode);
+    for (auto const& itr : regular_strings)
+    {
+        testnode.s = const_cast<char*>(itr.c_str());
+        retval = svm_predict(model, testnode);
 
-		retval == 1.0 ? regularSuccessTests++ : regularFailedTests++;
-	}
+        retval == 1.0 ? regularSuccessTests++ : regularFailedTests++;
+    }
 
-	for (auto const& itr : spam_strings)
-	{
-		testnode.s = const_cast<char*>(itr.c_str());
-		retval = svm_predict(model, testnode);
-		retval == -1.0 ? spamSuccessTests++ : spamFailedTests++;
-	}
+    for (auto const& itr : spam_strings)
+    {
+        testnode.s = const_cast<char*>(itr.c_str());
+        retval = svm_predict(model, testnode);
+        retval == -1.0 ? spamSuccessTests++ : spamFailedTests++;
+    }
 
     std::cout << "Result:" << std::endl;
-	std::cout << std::endl;
-	std::cout << regularSuccessTests << "\t" << spamFailedTests << std::endl;
-	std::cout << regularFailedTests << "\t" << spamSuccessTests << std::endl;
-	std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << regularSuccessTests << "\t" << spamFailedTests << std::endl;
+    std::cout << regularFailedTests << "\t" << spamSuccessTests << std::endl;
+    std::cout << std::endl;
     test_timer.stop(true);
 }
 
@@ -186,17 +186,17 @@ void SVMModel::predict_file(std::string file, PrintOptions printOptions /*= PRIN
 
     std::cout << "Predicting " << file << " file..." << std::endl;
     Timer test_timer("");
-	double retval;
+    double retval;
     unsigned int spam = 0;
     unsigned int non_spam = 0;
 
-	std::vector<std::string> tests;
-	read_file(file, tests, false);
+    std::vector<std::string> tests;
+    read_file(file, tests, false);
     size_t line_count = tests.size();
     int idx = 0;
     int percentage = 5;
-	for (auto const& itr : tests)
-	{
+    for (auto const& itr : tests)
+    {
         retval = predict(itr, printOptions, &spam_dump);
         retval == -1 ? spam++ : non_spam++;
         idx++;
@@ -205,7 +205,7 @@ void SVMModel::predict_file(std::string file, PrintOptions printOptions /*= PRIN
             std::cout << percentage << "%" << std::endl;
             percentage += 5;
         }
-	}
+    }
 
     std::cout << "Spam: " << spam << " | Non-Spam: " << non_spam << " | Exec time: " << test_timer.stop(false) << "s" << std::endl;
 }
@@ -215,21 +215,21 @@ bool SVMModel::prepare_string(std::string& str)
     if (str.size() <= 5)
         return false;
 
-	//to lowercase
-	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-	//remove spaces
-	str.erase(std::remove_if(str.begin(), str.end(), [](char ch) { return std::isspace<char>(ch, std::locale::classic()); }), str.end());
-	//replace all digits with 1's
-	//std::replace_if(str.begin(), str.end(), ::isdigit, '1');
-	std::replace(str.begin(), str.end(), '0', '1');
-	std::replace(str.begin(), str.end(), '2', '1');
-	std::replace(str.begin(), str.end(), '3', '1');
-	std::replace(str.begin(), str.end(), '4', '1');
-	std::replace(str.begin(), str.end(), '5', '1');
-	std::replace(str.begin(), str.end(), '6', '1');
-	std::replace(str.begin(), str.end(), '7', '1');
-	std::replace(str.begin(), str.end(), '8', '1');
-	std::replace(str.begin(), str.end(), '9', '1');
+    //to lowercase
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    //remove spaces
+    str.erase(std::remove_if(str.begin(), str.end(), [](char ch) { return std::isspace<char>(ch, std::locale::classic()); }), str.end());
+    //replace all digits with 1's
+    //std::replace_if(str.begin(), str.end(), ::isdigit, '1');
+    std::replace(str.begin(), str.end(), '0', '1');
+    std::replace(str.begin(), str.end(), '2', '1');
+    std::replace(str.begin(), str.end(), '3', '1');
+    std::replace(str.begin(), str.end(), '4', '1');
+    std::replace(str.begin(), str.end(), '5', '1');
+    std::replace(str.begin(), str.end(), '6', '1');
+    std::replace(str.begin(), str.end(), '7', '1');
+    std::replace(str.begin(), str.end(), '8', '1');
+    std::replace(str.begin(), str.end(), '9', '1');
 
     //Remove wow links
     str = std::regex_replace(str, std::regex("\\|H[^:]+:[^\\[]*([^\\|]+)\\|h"), "$1");
@@ -239,21 +239,21 @@ bool SVMModel::prepare_string(std::string& str)
 
 void SVMModel::read_file(std::string filename, std::vector<std::string>& output, bool prepare /*= true*/)
 {
-	std::ifstream training_file(filename);
+    std::ifstream training_file(filename);
 
-	std::string line;
-	while (std::getline(training_file, line))
-	{
+    std::string line;
+    while (std::getline(training_file, line))
+    {
         if (prepare)
         {
             if (prepare_string(line))
                 output.push_back(line);
         } else 
             output.push_back(line);
-	}
+    }
 
-	if (output.size() == 0)
-		*((unsigned int*)0) = 0xDEAD;
+    if (output.size() == 0)
+        *((unsigned int*)0) = 0xDEAD;
 }
 
 bool SVMModel::save_model(std::string file)

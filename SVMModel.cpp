@@ -28,7 +28,7 @@ SVMModel::SVMModel()
     param.C = 0.1;
     param.eps = 1e-5;
     param.p = 0.1;
-    param.shrinking = 1;
+    param.shrinking = 0;
     param.probability = 0;
 
     //weight
@@ -38,7 +38,7 @@ SVMModel::SVMModel()
     param.weight_label[1] = -1.0f; //spam
     param.weight = new double[param.nr_weight];
     param.weight[0] = 1.0f;
-    param.weight[1] = 1.0f;
+    param.weight[1] = 1.1f;
     /*
     param.nr_weight = 0;
     param.weight_label = NULL;
@@ -159,11 +159,19 @@ void SVMModel::predict_train_data()
 
 double SVMModel::predict(std::string const& line, PrintOptions printOptions /*= PRINT_NONE */, std::ofstream* spam_dump /* = nullptr */ )
 {
+    double retval;
     svm_data testnode;
     std::string line_prepared(line);
-    prepare_string(line_prepared);
-    testnode.s = const_cast<char*>(line_prepared.c_str());
-    double retval = svm_predict(model, testnode);
+    bool str_eligible = prepare_string(line_prepared);
+    if (str_eligible)
+    {
+        testnode.s = const_cast<char*>(line_prepared.c_str());
+        retval = svm_predict(model, testnode);
+    }
+    else {
+        retval = 1.0f;  //string was ineligible, set as good
+    }
+
     //print to console
     if (    (retval >= 0.0f && printOptions & PRINT_GOOD )
          || (retval <= 0.0f  && printOptions & PRINT_BAD  ) )
@@ -217,29 +225,41 @@ void SVMModel::predict_file(std::string file, PrintOptions printOptions /*= PRIN
     std::cout << "Spam: " << spam << " | Non-Spam: " << non_spam << " | Exec time: " << test_timer.stop(false) << "s" << std::endl;
 }
 
-bool SVMModel::prepare_string(std::string& str)
+// A string is not eligible if it's not long enough when we removed most bullshit data
+bool eligible_prepare(std::string const& str)
 {
-    if (str.size() <= 5)
+    std::string _str(str);
+
+    // remove this bunch of special characters
+    std::regex remove_chars(R"|([ !\.;\?:-_=$\(\)'"{}\[\]/\\<>\*&\+\^"])|");
+    _str = std::regex_replace(_str, remove_chars, "");
+
+    // remove chinese characters
+    // _str = std::regex_replace(_str, std::regex("([\u4e00}-\u9fa5}]+)"), "");
+    
+    // remove digits
+    std::remove_if(_str.begin(), _str.end(), &::iswdigit);
+
+    if (_str.size() <= 6)
         return false;
 
-    //to lowercase
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    return true;
+}
+
+bool SVMModel::prepare_string(std::string& str)
+{
+    if (!eligible_prepare(str))
+        return false;
+
+    //Remove wow vanilla links
+    str = std::regex_replace(str, std::regex("\\|c........\\|H[^\\|]+\\|h([^\\|]+)\\|h\\|r"), "$1");
+
     //remove spaces
     str.erase(std::remove_if(str.begin(), str.end(), [](char ch) { return std::isspace<char>(ch, std::locale::classic()); }), str.end());
+    //to lowercase
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
     //replace all digits with 1's
-    //std::replace_if(str.begin(), str.end(), ::isdigit, '1');
-    std::replace(str.begin(), str.end(), '0', '1');
-    std::replace(str.begin(), str.end(), '2', '1');
-    std::replace(str.begin(), str.end(), '3', '1');
-    std::replace(str.begin(), str.end(), '4', '1');
-    std::replace(str.begin(), str.end(), '5', '1');
-    std::replace(str.begin(), str.end(), '6', '1');
-    std::replace(str.begin(), str.end(), '7', '1');
-    std::replace(str.begin(), str.end(), '8', '1');
-    std::replace(str.begin(), str.end(), '9', '1');
-
-    //Remove wow links
-    str = std::regex_replace(str, std::regex("\\|H[^:]+:[^\\[]*([^\\|]+)\\|h"), "$1");
+    std::replace_if(str.begin(), str.end(), &::iswdigit, '1');
 
     return true;
 }
@@ -291,6 +311,7 @@ void SVMModel::test_C(std::string training_regular_file, std::string training_sp
 
     for (auto testvalue : testValues)
     {
+        std::cout << "Testing C with value testvalue (testing file regular: " << testing_regular_file << ", testing file spam: " << testing_spam_file << ")" << std::endl;
         int regular_success = 0;
         int regular_failure = 0;
         int spam_success = 0;
@@ -343,7 +364,7 @@ void SVMModel::do_cross_validation(std::string training_regular_file, std::strin
     param.C = 0.1;
     param.eps = 1e-5;
     param.p = 0.1;
-    param.shrinking = 1;
+    param.shrinking = 0;
     param.probability = 0;
 
     //weight
@@ -379,7 +400,7 @@ void SVMModel::do_cross_validation(std::string training_regular_file, std::strin
 
     // --- Original func from this point ---
 
-    int i;
+    unsigned int i;
     int total_correct = 0;
     double total_error = 0;
     double sumv = 0, sumy = 0, sumvv = 0, sumyy = 0, sumvy = 0;

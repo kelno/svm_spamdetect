@@ -2181,7 +2181,7 @@ static void svm_binary_svc_probability(
 			subparam.probability=0;
 			subparam.C=1.0;
 			subparam.nr_weight=2;
-			subparam.weight_label = Malloc(int,2);
+			subparam.weight_label = Malloc(double,2);
 			subparam.weight = Malloc(double,2);
 			subparam.weight_label[0]=+1;
 			subparam.weight_label[1]=-1;
@@ -2407,7 +2407,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 				if(param->weight_label[i] == label[j])
 					break;
 			if(j == nr_class)
-				fprintf(stderr,"WARNING: class label %d specified in weight is not found\n", param->weight_label[i]);
+				fprintf(stderr,"WARNING: class label %f specified in weight is not found\n", param->weight_label[i]);
 			else
 				weighted_C[j] *= param->weight[i];
 		}

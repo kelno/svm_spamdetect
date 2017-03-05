@@ -33,12 +33,12 @@ SVMModel::SVMModel()
 
     //weight
 	param.nr_weight = 2;
-    param.weight_label = new int[param.nr_weight];
-    param.weight_label[0] = 1; //non spam
-    param.weight_label[1] = -1; //spam
+    param.weight_label = new double[param.nr_weight];
+    param.weight_label[0] = 1.0f; //non spam
+    param.weight_label[1] = -1.0f; //spam
     param.weight = new double[param.nr_weight];
     param.weight[0] = 1.0f;
-    param.weight[1] = 2.0f;
+    param.weight[1] = 1.0f;
     /*
     param.nr_weight = 0;
     param.weight_label = NULL;
@@ -275,11 +275,8 @@ bool SVMModel::load_model(std::string file)
     return model != nullptr;
 }
 
-void SVMModel::test_C(std::string training_regular_file, std::string training_spam_file, std::string testing_regular_file, std::string testing_spam_file)
+void SVMModel::test_C(std::string training_regular_file, std::string training_spam_file, std::string testing_regular_file, std::string testing_spam_file, std::vector<double> const& testValues)
 {
-    double testValues[] = { 0.01f, 0.1f, 1.0f, 10.0f, 100.0f, 1000.0f };
-
-
     std::vector<std::string> testsRegulars;
     std::vector<std::string> testSpams;
     read_file(testing_regular_file, testsRegulars, true);

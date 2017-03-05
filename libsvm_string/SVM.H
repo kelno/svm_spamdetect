@@ -26,7 +26,7 @@ struct svm_problem
 {
 	unsigned int l;
 	double *y;
-//    int* y;
+    //int* y;
 	struct svm_data *x;
 };
 
@@ -63,7 +63,7 @@ struct svm_parameter
 	double eps;	/* stopping criteria */
 	double C;	/* for C_SVC, EPSILON_SVR and NU_SVR */
 	int nr_weight;		/* for C_SVC */
-	int* weight_label;	/* for C_SVC */
+	double* weight_label;	/* for C_SVC */
 	double* weight;		/* for C_SVC */
 	double nu;	/* for NU_SVC, ONE_CLASS, and NU_SVR */
 	double p;	/* for EPSILON_SVR */

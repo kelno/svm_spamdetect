@@ -1,4 +1,3 @@
-#define _STRING
 
 /* TODO
 - Tweak C + weight
@@ -14,31 +13,26 @@
 -> Beaucoup de char spéciaux? -> SVM (+ SVM moins précis avant?)
                               -> Bayes
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
+#include <string>
+#include <iostream>
 #include "svm.h"
-#define Malloc(type,n) (type *)malloc((n)*sizeof(type))
-#include "Timer.h"
 #include "SVMModel.h"
 
 int main(int argc, char **argv)
 {
     //Problem definition-------------------------------------------------------------
     SVMModel test;
-    //test.prepare("regular_training.txt", "spam_training.txt");
-    //test.save_model("model.svm");
-    test.load_model("model.svm");
+    test.prepare("regular_training.txt", "spam_training.txt", 0.1f);
+    test.save_model("model.svm");
+    //test.load_model("model.svm");
 
     //test.predict_train_data();
-    //test.predict_file("test.txt", true);
-    //test.predict_file("zet_spamdetect_20170302.csv", true);
-    test.predict_file("random3.txt", true, true);
-    //test.predict_file("regular_training.txt", true, true);
-    //test.predict_file("spam_training.txt", true, true);
-   
+    //test.predict_file ("test.txt", SVMModel::PRINT_ALL);
+    test.predict_file("ely_spamdetect_20170303.txt", SVMModel::PRINT_GOOD);
+    //test.predict_file("goodOnes.txt", SVMModel::PRINT_BAD);
+    //test.predict_file("regular_training.txt", SVMModel::PRINT_BAD);
+    //test.predict_file("spam_training.txt", SVMModel::PRINT_BAD);
+    //test.test_C("regular_training.txt", "spam_training.txt", "goodOnes.txt", "ely_spamdetect_20170303.txt");
 
     std::string lol;
     std::cin >> lol;

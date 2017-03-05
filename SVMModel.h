@@ -26,11 +26,12 @@ public:
         PRINT_ALL  = PRINT_GOOD | PRINT_BAD,
     };
 
-	// Run testing file
+    // Run testing file
     void predict_file(std::string file, PrintOptions options = PRINT_NONE);
     double predict(std::string const& line, PrintOptions options = PRINT_NONE, std::ofstream* spam_dump = nullptr);
 
     void test_C(std::string training_regular_file, std::string training_spam_file, std::string testing_regular_file, std::string testing_spam_file, std::vector<double> const& testValues);
+    void do_cross_validation(std::string training_regular_file, std::string training_spam_file, int nr_fold);
 
     bool save_model(std::string file);
     bool load_model(std::string file);
@@ -45,6 +46,7 @@ private:
     std::vector<std::string> spam_strings;
     svm_model* model;
     svm_parameter param;
+
 };
 
 #endif

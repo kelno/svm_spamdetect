@@ -94,6 +94,13 @@ void SVMModel::prepare(std::string regular_file, std::string spam_file, double o
 
     prob.x = x;
 
+    // Validate parameters
+    const char* err = svm_check_parameter(&prob, &param);
+    if (err != NULL)
+    {
+       std::cout << "svm_check_parameter failed with error " << err << std::endl;
+       return;
+    }
 
     // Train model
     model = svm_train(&prob, &param);
@@ -280,7 +287,7 @@ void SVMModel::test_C(std::string training_regular_file, std::string training_sp
     std::vector<std::string> testsRegulars;
     std::vector<std::string> testSpams;
     read_file(testing_regular_file, testsRegulars, true);
-    read_file(testing_spam_file, testsRegulars, true);
+    read_file(testing_spam_file, testSpams, true);
 
     for (auto testvalue : testValues)
     {
@@ -317,12 +324,60 @@ void SVMModel::test_C(std::string training_regular_file, std::string training_sp
     }
 }
 
-/*
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
-void do_cross_validation(int nr_fold)
+void SVMModel::do_cross_validation(std::string training_regular_file, std::string training_spam_file, int nr_fold)
 {
+    read_file("regular_training.txt", regular_strings);
+    read_file("spam_training.txt", spam_strings);
 
+    svm_parameter param;
+    param.svm_type = C_SVC;
+    param.kernel_type = EDIT;
+    param.data_type = STRING;
+    param.degree = 3; //OSEF
+    param.gamma = 0.5; //OSEF
+    param.coef0 = 0; //OSEF
+    param.nu = 0.5;
+    param.cache_size = 1024;
+    param.C = 0.1;
+    param.eps = 1e-5;
+    param.p = 0.1;
+    param.shrinking = 1;
+    param.probability = 0;
+
+    //weight
+    param.nr_weight = 2;
+    param.weight_label = new double[param.nr_weight];
+    param.weight_label[0] = 1.0f; //non spam
+    param.weight_label[1] = -1.0f; //spam
+    param.weight = new double[param.nr_weight];
+    param.weight[0] = 1.0f;
+    param.weight[1] = 1.0f;
+
+    struct svm_problem prob;
+    prob.l = unsigned int(regular_strings.size() + spam_strings.size());
+
+    svm_data* x = new svm_data[prob.l];
+    prob.y = new double[prob.l];
+
+    unsigned int idx = 0;
+    for (auto const& itr : regular_strings)
+    {
+        x[idx].s = const_cast<char*>(itr.c_str());
+        prob.y[idx] = 1.0f;
+        idx++;
+    }
+    for (auto const& itr : spam_strings)
+    {
+        x[idx].s = const_cast<char*>(itr.c_str());
+        prob.y[idx] = -1.0f;
+        idx++;
+    }
+
+    prob.x = x;
+
+    // --- Original func from this point ---
 
     int i;
     int total_correct = 0;
@@ -360,4 +415,3 @@ void do_cross_validation(int nr_fold)
     }
     free(target);
 }
-*/

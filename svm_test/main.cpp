@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         return 1;
 
     SVM_Spam test(argv[1]);
-    //test.prepare("regular_training.txt", "spam_training.txt", 0.09f);
+    //test.prepare("regular_training.txt", "spam_training.txt", 0.08f);
     //test.save_model("model.svm");
     test.load_model("model.svm");
 
@@ -32,14 +32,13 @@ int main(int argc, char **argv)
     //test.predict_file("goodOnes.txt", SVM_Spam::PRINT_BAD);
     //test.predict_file("regular_training.txt", SVM_Spam::PRINT_BAD);
     //test.predict_file("spam_training.txt", SVM_Spam::PRINT_BAD);
-    //std::vector<double> testValues = { 0.01f, 0.1f, 1.0f, 10.0f, 100.0f, 1000.0f };
-    //test.test_C("regular_training.txt", "spam_training.txt", "goodOnes.txt", "ely_spamdetect_20170303.txt", testValues);
     //test.do_cross_validation("regular_training.txt", "spam_training.txt", 2);
         
     std::string inputLine;
     while (true)
     {
         std::getline(std::cin, inputLine);
-        test.predict(inputLine, SVM_Spam::PRINT_ALL);
+        if (inputLine != "")
+            test.predict(inputLine, SVM_Spam::PRINT_ALL);
     }
 }

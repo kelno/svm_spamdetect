@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "svm.h"
+#include "CharEquivalences.h"
 
 class SVM_Spam
 {
@@ -36,11 +37,11 @@ public:
     bool save_model(std::string file);
     bool load_model(std::string file);
 
-    bool load_character_equivalences();
-
 private:
     //return false if string can be ignored for training
     bool prepare_string(std::string& str);
+    void replace_equivalent_characters(std::string& str);
+    static bool eligible_for_prepare(std::string const& str);
 
     void read_file(std::string filename, std::vector<std::string>& output, bool prepare = true);
 
@@ -49,6 +50,8 @@ private:
     svm_model* model;
     svm_parameter param;
     std::string data_dir;
+
+    CharEquivalences equi;
 };
 
 #endif

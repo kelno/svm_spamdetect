@@ -17,13 +17,12 @@
 using namespace std;
 
 const int LIMIT_INPUT_LOL = 3000; //0 to disable
-
-extern CharEquivalences equi;
+const std::string equivalence_filename = "characters_equivalences.txt";
 
 SVM_Spam::SVM_Spam(std::string data_dir)
     : model(nullptr), data_dir(data_dir)
 {
-    equi.load_character_equivalences(data_dir);
+    equi.load_character_equivalences(data_dir + '/' + equivalence_filename);
 
     param.svm_type = C_SVC;
     param.kernel_type = EDIT;
@@ -241,7 +240,7 @@ void SVM_Spam::predict_file(std::string file, PrintOptions printOptions /*= PRIN
 }
 
 // A string is not eligible if it's not long enough when we removed most non significative data
-bool eligible_prepare(std::string const& str)
+bool SVM_Spam::eligible_for_prepare(std::string const& str)
 {
     std::string _str(str);
 
@@ -266,7 +265,7 @@ bool eligible_prepare(std::string const& str)
 
 /* Replace similar looking characters
 */
-void replace_equivalent_characters(std::string& str)
+void SVM_Spam::replace_equivalent_characters(std::string& str)
 {
     // + TODO, si pas character alpha, on peut skip
     // + TODO, gros tableau de correspondance pour speed up
@@ -287,7 +286,7 @@ void replace_equivalent_characters(std::string& str)
 
 bool SVM_Spam::prepare_string(std::string& str)
 {
-    if (!eligible_prepare(str))
+    if (!SVM_Spam::eligible_for_prepare(str))
         return false;
 
     // ! Order is important !

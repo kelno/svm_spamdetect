@@ -7,11 +7,9 @@
 #include <locale>
 #include <codecvt>
 
-CharEquivalences equi;
-
-bool CharEquivalences::load_character_equivalences(std::string data_dir)
+bool CharEquivalences::load_character_equivalences(std::string full_path_to_file)
 {
-	std::wifstream file(data_dir + '/' + equivalence_filename);
+	std::wifstream file(full_path_to_file);
 
     if (file.fail())
         return false;
@@ -22,10 +20,10 @@ bool CharEquivalences::load_character_equivalences(std::string data_dir)
 	std::wstring line;
 	while (std::getline(file, line))
 	{
-		equi.regex_check.resize(i + 1);
-        equi.groups.resize(i + 1);
+		regex_check.resize(i + 1);
+        groups.resize(i + 1);
 
-        equi.groups[i] = line;
+        groups[i] = line;
 
 		//remove spaces
 		line.erase(std::remove_if(line.begin(), line.end(), [](char ch) { return std::isspace<char>(ch, std::locale::classic()); }), line.end());
@@ -34,7 +32,7 @@ bool CharEquivalences::load_character_equivalences(std::string data_dir)
 
 		// /!\ This does not support regex character. If regex chars are added to the list, we need to escape them
         //std::wregex test(regex_str);
-        equi.regex_check[i] = regex_str;
+        regex_check[i] = regex_str;
 		i++;
 	}
 

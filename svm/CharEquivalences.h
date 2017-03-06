@@ -5,8 +5,6 @@
 #include <string>
 #include <regex>
 
-const std::string equivalence_filename = "characters_equivalences.txt";
-
 //init in load_character_equivalences
 class CharEquivalences 
 {
@@ -14,8 +12,7 @@ public:
     std::vector<std::wstring> groups;
     std::vector<std::wregex> regex_check;
 
-    bool load_character_equivalences(std::string data_dir);
-
+    bool load_character_equivalences(std::string full_path_to_file);
 };
 
 #endif H_EQUIVALENCES

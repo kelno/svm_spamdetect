@@ -385,7 +385,7 @@ double Kernel::dot(const svm_node *px, const svm_node *py)
 bool equivalent_character(const char one, const char two)
 {
     return one == two;
-    /*
+    /* TOO SLOOOOOW
     static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
     if (one == two)

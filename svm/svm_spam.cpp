@@ -70,8 +70,8 @@ void SVM_Spam::prepare(std::string regular_file, std::string spam_file, double o
     Timer timer("Total training time: ");
     regular_strings.reserve(200000);
     spam_strings.reserve(200000);
-    read_file("regular_training.txt", regular_strings);
-    read_file("spam_training.txt", spam_strings);
+    read_file(regular_file, regular_strings);
+    read_file(spam_file, spam_strings);
 
     if (LIMIT_INPUT_LOL)
     {
@@ -312,7 +312,7 @@ bool SVM_Spam::prepare_string(std::string& str)
 
 void SVM_Spam::read_file(std::string filename, std::vector<std::string>& output, bool prepare /*= true*/)
 {
-    std::ifstream training_file(filename);
+    std::ifstream training_file(data_dir + '/' + filename);
 
     std::string line;
     while (std::getline(training_file, line))
@@ -337,15 +337,19 @@ bool SVM_Spam::save_model(std::string file)
         return false;
     }
 
-    int ret = svm_save_model(file.c_str(), model);
+    int ret = svm_save_model((data_dir + '/' + file).c_str(), model);
     return ret == 0;
 }
 
 bool SVM_Spam::load_model(std::string file)
 {
     delete model;
-    model = svm_load_model(file.c_str());
-    return model != nullptr;
+    model = svm_load_model((data_dir + '/' + file).c_str());
+    bool ok = model != nullptr;
+    if (!ok)
+        std::cerr << "Failed to load model " << file << std::endl;
+
+    return ok;
 }
 
 void SVM_Spam::test_C(std::string training_regular_file, std::string training_spam_file, std::string testing_regular_file, std::string testing_spam_file, std::vector<double> const& testValues)

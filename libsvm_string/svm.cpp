@@ -1,4 +1,4 @@
-#include <math.h>
+﻿#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -10,6 +10,9 @@
 #include "svm.h"
 #include <vector>
 #include <algorithm>
+#include <string>
+#include <regex>
+
 //until I get openmp to work here
 #include "../ThreadPool.h" 
 
@@ -377,10 +380,37 @@ double Kernel::dot(const svm_node *px, const svm_node *py)
     return sum;
 }
 
+//#include <codecvt>
+
+bool equivalent_character(const char one, const char two)
+{
+    return one == two;
+    /*
+    static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
+    if (one == two)
+        return true;
+
+    if (isalpha(one) && isalpha(two))
+        return one == two; //should always return false because of precedent condition: one == two
+
+    static std::wstring s(converter.from_bytes("  "));
+    s[0] = one;
+    s[1] = two;
+    for (auto regex : equi.regex_check)
+    {
+        if (std::regex_match(s, regex))
+            return true;
+    }
+    // A TEST -> map
+
+    return false;
+    */
+}
+
 #ifdef _STRING
 double Kernel::edit(const char *px, const char *py)
 {
-
 #define OLD
 #ifdef OLD
     double* row[2];
@@ -413,7 +443,7 @@ double Kernel::edit(const char *px, const char *py)
                         row[now][i] + 1                        );
             */
             min = std::min(row[now][i] + 1, row[old][i + 1] + 1);
-            if (px[i] == py[j])
+            if (equivalent_character(px[i], py[j]))
             {
                 min = std::min(min, row[old][i]);
                 similarity++;
@@ -2765,16 +2795,21 @@ double svm_predict_values(const svm_model *model, const svm_data x, double* dec_
        model->param.svm_type == NU_SVR)
     {
         double *sv_coef = model->sv_coef[0];
-        double sum = 0; int i;
+        double sum = 0;
 //replace OPENMP with ThreadPool until I get it to work
 #ifdef _OPENMP_
+        int i;
 #pragma omp parallel for private(i) reduction(+:sum)
 #endif
       //  for(i=0;i<model->l;i++)
+        std::vector<double> sums(model->l);
         ThreadPool::ParallelFor(0, model->l, [&](int i)
         {
-            sum += sv_coef[i] * Kernel::k_function(x, model->SV[i], model->param);
+            sums[i] = sv_coef[i] * Kernel::k_function(x, model->SV[i], model->param);
         });
+        for (auto itr : sums)
+            sum += itr;
+
         sum -= model->rho[0];
         *dec_values = sum;
 

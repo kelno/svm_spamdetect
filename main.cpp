@@ -20,15 +20,15 @@
 
 int main(int argc, char **argv)
 {
-    SVMModel test;
-    test.prepare("regular_training.txt", "spam_training.txt", 0.09f);
-    test.save_model("model.svm");
-    //test.load_model("model.svm");
+    SVMModel test("E:/work/SPAM/data/");
+    //test.prepare("regular_training.txt", "spam_training.txt", 0.09f);
+    //test.save_model("model.svm");
+    test.load_model("model.svm");
 
     //test.predict_train_data();
     //test.predict_file ("test.txt", SVMModel::PRINT_ALL);
-    //test.predict_file ("random3.txt", SVMModel::PRINT_BAD);
-    test.predict_file("ely_spamdetect_20170303.txt", SVMModel::PRINT_GOOD);
+    test.predict_file ("random3.txt", SVMModel::PRINT_BAD);
+    //test.predict_file("ely_spamdetect_20170303.txt", SVMModel::PRINT_GOOD);
     //test.predict_file("goodOnes.txt", SVMModel::PRINT_BAD);
     //test.predict_file("regular_training.txt", SVMModel::PRINT_BAD);
     //test.predict_file("spam_training.txt", SVMModel::PRINT_BAD);

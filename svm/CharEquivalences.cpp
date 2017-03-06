@@ -28,11 +28,10 @@ bool CharEquivalences::load_character_equivalences(std::string full_path_to_file
 		//remove spaces
 		line.erase(std::remove_if(line.begin(), line.end(), [](char ch) { return std::isspace<char>(ch, std::locale::classic()); }), line.end());
 
-		std::wstring regex_str = converter.from_bytes("[") + line + converter.from_bytes("]{2}");
+        // /!\ This does not support regex character. If regex chars are added to the list, we need to escape them
+		std::wstring regex_str = converter.from_bytes("[") + line + converter.from_bytes("]");
 
-		// /!\ This does not support regex character. If regex chars are added to the list, we need to escape them
-        //std::wregex test(regex_str);
-        regex_check[i] = regex_str;
+        regex_check[i] = std::wregex(regex_str);
 		i++;
 	}
 

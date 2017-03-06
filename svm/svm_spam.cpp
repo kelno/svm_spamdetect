@@ -22,7 +22,9 @@ const std::string equivalence_filename = "characters_equivalences.txt";
 SVM_Spam::SVM_Spam(std::string data_dir)
     : model(nullptr), data_dir(data_dir)
 {
-    equi.load_character_equivalences(data_dir + '/' + equivalence_filename);
+    bool result = equi.load_character_equivalences(data_dir + '/' + equivalence_filename);
+    if (!result)
+        std::cerr << "Failed to load equivalences file" << std::endl;
 
     param.svm_type = C_SVC;
     param.kernel_type = EDIT;
@@ -30,7 +32,7 @@ SVM_Spam::SVM_Spam(std::string data_dir)
     param.degree = 3; //OSEF
     param.gamma = 0.5; //OSEF
     param.coef0 = 0; //OSEF
-    param.nu = 0.9;
+    param.nu = 0.8;
     param.cache_size = 1024;
     param.C = 0.09;
     param.eps = 1e-5;

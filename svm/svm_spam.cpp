@@ -1,4 +1,4 @@
-#include "SVMModel.h"
+#include "SVM_Spam.h"
 #include "Timer.h"
 
 #include "svm.h"
@@ -20,7 +20,7 @@ const int LIMIT_INPUT_LOL = 3000; //0 to disable
 
 extern CharEquivalences equi;
 
-SVMModel::SVMModel(std::string data_dir)
+SVM_Spam::SVM_Spam(std::string data_dir)
     : model(nullptr), data_dir(data_dir)
 {
     equi.load_character_equivalences(data_dir);
@@ -54,13 +54,13 @@ SVMModel::SVMModel(std::string data_dir)
     */
 }
 
-SVMModel::~SVMModel()
+SVM_Spam::~SVM_Spam()
 {
     svm_destroy_param(&param);
     delete model;
 }
 
-void SVMModel::prepare(std::string regular_file, std::string spam_file, double overrideC /*= 0.0f*/)
+void SVM_Spam::prepare(std::string regular_file, std::string spam_file, double overrideC /*= 0.0f*/)
 {
     double oldC = param.C;
     if (overrideC != 0.0f)
@@ -131,11 +131,11 @@ void SVMModel::prepare(std::string regular_file, std::string spam_file, double o
 }
 
 // Just run prediction on the data the model was fed on
-void SVMModel::predict_train_data()
+void SVM_Spam::predict_train_data()
 {
     if (!model || regular_strings.empty() || spam_strings.empty())
     {
-        std::cerr << "SVMModel has not been trained yet" << std::endl;
+        std::cerr << "SVM_Spam has not been trained yet" << std::endl;
         return;
     }
 
@@ -172,7 +172,7 @@ void SVMModel::predict_train_data()
     test_timer.stop(true);
 }
 
-double SVMModel::predict(std::string const& line, PrintOptions printOptions /*= PRINT_NONE */, std::ofstream* spam_dump /* = nullptr */ )
+double SVM_Spam::predict(std::string const& line, PrintOptions printOptions /*= PRINT_NONE */, std::ofstream* spam_dump /* = nullptr */ )
 {
     double retval;
     svm_data testnode;
@@ -201,11 +201,11 @@ double SVMModel::predict(std::string const& line, PrintOptions printOptions /*= 
     return retval;
 }
 
-void SVMModel::predict_file(std::string file, PrintOptions printOptions /*= PRINT_NONE*/)
+void SVM_Spam::predict_file(std::string file, PrintOptions printOptions /*= PRINT_NONE*/)
 {
     if (!model)
     {
-        std::cerr << "SVMModel has no model loaded" << std::endl;
+        std::cerr << "SVM_Spam has no model loaded" << std::endl;
         return;
     }
 
@@ -240,7 +240,7 @@ void SVMModel::predict_file(std::string file, PrintOptions printOptions /*= PRIN
     std::cout << "Spam: " << spam << " | Non-Spam: " << non_spam << " | Exec time: " << test_timer.stop(false) << "s" << std::endl;
 }
 
-// A string is not eligible if it's not long enough when we removed most bullshit data
+// A string is not eligible if it's not long enough when we removed most non significative data
 bool eligible_prepare(std::string const& str)
 {
     std::string _str(str);
@@ -285,7 +285,7 @@ void replace_equivalent_characters(std::string& str)
     str = converter.to_bytes(str_16);
 }
 
-bool SVMModel::prepare_string(std::string& str)
+bool SVM_Spam::prepare_string(std::string& str)
 {
     if (!eligible_prepare(str))
         return false;
@@ -310,7 +310,7 @@ bool SVMModel::prepare_string(std::string& str)
     return true;
 }
 
-void SVMModel::read_file(std::string filename, std::vector<std::string>& output, bool prepare /*= true*/)
+void SVM_Spam::read_file(std::string filename, std::vector<std::string>& output, bool prepare /*= true*/)
 {
     std::ifstream training_file(filename);
 
@@ -329,11 +329,11 @@ void SVMModel::read_file(std::string filename, std::vector<std::string>& output,
         *((unsigned int*)0) = 0xDEAD;
 }
 
-bool SVMModel::save_model(std::string file)
+bool SVM_Spam::save_model(std::string file)
 {
     if (!model)
     {
-        std::cerr << "SVMModel has no model loaded" << std::endl;
+        std::cerr << "SVM_Spam has no model loaded" << std::endl;
         return false;
     }
 
@@ -341,14 +341,14 @@ bool SVMModel::save_model(std::string file)
     return ret == 0;
 }
 
-bool SVMModel::load_model(std::string file)
+bool SVM_Spam::load_model(std::string file)
 {
     delete model;
     model = svm_load_model(file.c_str());
     return model != nullptr;
 }
 
-void SVMModel::test_C(std::string training_regular_file, std::string training_spam_file, std::string testing_regular_file, std::string testing_spam_file, std::vector<double> const& testValues)
+void SVM_Spam::test_C(std::string training_regular_file, std::string training_spam_file, std::string testing_regular_file, std::string testing_spam_file, std::vector<double> const& testValues)
 {
     std::vector<std::string> testsRegulars;
     std::vector<std::string> testSpams;
@@ -366,7 +366,7 @@ void SVMModel::test_C(std::string training_regular_file, std::string training_sp
         prepare(training_regular_file, training_spam_file, testvalue);
         for (auto itr : testsRegulars)
         {
-            double res = predict(itr, SVMModel::PRINT_NONE);
+            double res = predict(itr, SVM_Spam::PRINT_NONE);
             if (res < 0.0f)
                 regular_failure++;
             else
@@ -375,7 +375,7 @@ void SVMModel::test_C(std::string training_regular_file, std::string training_sp
 
         for (auto itr : testSpams)
         {
-            double res = predict(itr, SVMModel::PRINT_NONE);
+            double res = predict(itr, SVM_Spam::PRINT_NONE);
             if (res < 0.0f)
                 spam_success++;
             else
@@ -393,7 +393,7 @@ void SVMModel::test_C(std::string training_regular_file, std::string training_sp
 
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
-void SVMModel::do_cross_validation(std::string training_regular_file, std::string training_spam_file, int nr_fold)
+void SVM_Spam::do_cross_validation(std::string training_regular_file, std::string training_spam_file, int nr_fold)
 {
     read_file("regular_training.txt", regular_strings);
     read_file("spam_training.txt", spam_strings);

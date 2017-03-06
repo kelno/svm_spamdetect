@@ -14,7 +14,7 @@
 #include <regex>
 
 //until I get openmp to work here
-#include "../ThreadPool.h" 
+#include "ThreadPool.h" 
 
 int libsvm_version = LIBSVM_VERSION;
 typedef float Qfloat;

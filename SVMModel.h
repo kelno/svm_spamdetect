@@ -9,7 +9,7 @@ class SVMModel
 {
 
 public:
-    SVMModel();
+    SVMModel(std::string dataDir);
     ~SVMModel();
 
     void prepare(std::string regular_file, std::string spam_file, double overrideC = 0.0f);
@@ -36,6 +36,8 @@ public:
     bool save_model(std::string file);
     bool load_model(std::string file);
 
+    bool load_character_equivalences();
+
 private:
     //return false if string can be ignored for training
     bool prepare_string(std::string& str);
@@ -46,7 +48,7 @@ private:
     std::vector<std::string> spam_strings;
     svm_model* model;
     svm_parameter param;
-
+    std::string data_dir;
 };
 
 #endif

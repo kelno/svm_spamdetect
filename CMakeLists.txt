@@ -9,7 +9,12 @@ include_directories(libsvm_string)
 add_executable(spam_svm 
     main.cpp
     SVMModel.cpp
+	ThreadPool.cpp
+	CharEquivalences.cpp
+
+	SVMModel.h
 	ThreadPool.h
+	CharEquivalences.h
 )
 
 target_link_libraries(spam_svm

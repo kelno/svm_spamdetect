@@ -11,21 +11,29 @@
 #include <iostream>
 #include <regex>
 #include <functional>
+#include "CharEquivalences.h"
+#include <codecvt>
+
+using namespace std;
 
 const int LIMIT_INPUT_LOL = 3000; //0 to disable
 
-SVMModel::SVMModel()
-    : model(nullptr)
+extern CharEquivalences equi;
+
+SVMModel::SVMModel(std::string data_dir)
+    : model(nullptr), data_dir(data_dir)
 {
+    equi.load_character_equivalences(data_dir);
+
     param.svm_type = C_SVC;
     param.kernel_type = EDIT;
     param.data_type = STRING;
     param.degree = 3; //OSEF
     param.gamma = 0.5; //OSEF
     param.coef0 = 0; //OSEF
-    param.nu = 0.5;
+    param.nu = 0.9;
     param.cache_size = 1024;
-    param.C = 0.1;
+    param.C = 0.09;
     param.eps = 1e-5;
     param.p = 0.1;
     param.shrinking = 0;
@@ -44,7 +52,6 @@ SVMModel::SVMModel()
     param.weight_label = NULL;
     param.weight = NULL;
     */
-
 }
 
 SVMModel::~SVMModel()
@@ -68,8 +75,16 @@ void SVMModel::prepare(std::string regular_file, std::string spam_file, double o
 
     if (LIMIT_INPUT_LOL)
     {
+        //LIMIT_INPUT_LOL???
         std::random_shuffle(regular_strings.begin(), regular_strings.end());
-        regular_strings.resize(LIMIT_INPUT_LOL);
+        if (regular_strings.size() > LIMIT_INPUT_LOL)
+            regular_strings.resize(LIMIT_INPUT_LOL);
+
+        std::random_shuffle(spam_strings.begin(), spam_strings.end());
+        if(spam_strings.size() > LIMIT_INPUT_LOL)
+            spam_strings.resize(LIMIT_INPUT_LOL);
+
+        // LIMIT_INPUT_LOL \!\!\!
     }
 
     struct svm_problem prob;
@@ -234,6 +249,9 @@ bool eligible_prepare(std::string const& str)
     std::regex remove_chars(R"|([ !\.;\?:-_=$\(\)'"{}\[\]/\\<>\*&\+\^"])|");
     _str = std::regex_replace(_str, remove_chars, "");
 
+    //TODO + Remove all CHINESE character, so that if we only have a few other characters left, we skip
+    //TODO + Remove all RUSSIAN character, so that if we only have a few other characters left, we skip
+
     // remove chinese characters
     // _str = std::regex_replace(_str, std::regex("([\u4e00}-\u9fa5}]+)"), "");
     
@@ -246,18 +264,46 @@ bool eligible_prepare(std::string const& str)
     return true;
 }
 
+/* Replace similar looking characters
+*/
+void replace_equivalent_characters(std::string& str)
+{
+    // + TODO, si pas character alpha, on peut skip
+    // + TODO, gros tableau de correspondance pour speed up
+
+    static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
+    std::wstring str_16(converter.from_bytes(str));
+
+    for (int i = 0; i < equi.regex_check.size(); i++)
+    {
+        std::wregex& regex = equi.regex_check[i];
+        wchar_t firstChar = equi.groups[i][0];
+        str_16 = std::regex_replace(str_16, regex, &firstChar);
+    }
+
+    str = converter.to_bytes(str_16);
+}
+
 bool SVMModel::prepare_string(std::string& str)
 {
     if (!eligible_prepare(str))
         return false;
 
+    // ! Order is important !
+
     //Remove wow vanilla links
     str = std::regex_replace(str, std::regex("\\|c........\\|H[^\\|]+\\|h([^\\|]+)\\|h\\|r"), "$1");
 
-    //remove spaces
-    str.erase(std::remove_if(str.begin(), str.end(), [](char ch) { return std::isspace<char>(ch, std::locale::classic()); }), str.end());
     //to lowercase
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
+    //
+    replace_equivalent_characters(str);
+
+    //remove spaces
+    str.erase(std::remove_if(str.begin(), str.end(), [](char ch) { return std::isspace<char>(ch, std::locale::classic()); }), str.end());
+
     //replace all digits with 1's
     std::replace_if(str.begin(), str.end(), &::iswdigit, '1');
 

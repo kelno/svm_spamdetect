@@ -1,16 +1,16 @@
-#ifndef H_SVMMODEL
-#define H_SVMMODEL
+#ifndef H_SVM_Spam
+#define H_SVM_Spam
 
 #include <vector>
 #include <string>
 #include "svm.h"
 
-class SVMModel
+class SVM_Spam
 {
 
 public:
-    SVMModel(std::string dataDir);
-    ~SVMModel();
+    SVM_Spam(std::string dataDir);
+    ~SVM_Spam();
 
     void prepare(std::string regular_file, std::string spam_file, double overrideC = 0.0f);
 
